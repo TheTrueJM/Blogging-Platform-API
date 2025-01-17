@@ -1,7 +1,7 @@
 # Blogging Platform API
 A solution to the [Blogging Platform API](https://roadmap.sh/projects/blogging-platform-api) project available on [roadmap.sh](https://roadmap.sh).
 
-This project...
+This project is a simple RESTful API for personal blog posting. The API supports CRUD operations through HTTP request methods, for creating, reading, updating, and deleting blog post data. The API is built using Flask and SQLAlchemy, interacting with an SQLite database.
 
 ## Features
 - **Create Blog Post:** Create post with a title, content, category, and list of tags
