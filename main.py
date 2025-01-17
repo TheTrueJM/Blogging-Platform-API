@@ -12,6 +12,7 @@ db = SQLAlchemy(app)
 routes = Api(app)
 
 
+# Table structure for posts in the database
 class PostModel(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String)
@@ -21,16 +22,19 @@ class PostModel(db.Model):
     createdAt = db.Column(db.DateTime, default=datetime.now)
     updatedAt = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
-class TagsField(fields.Raw):
-    def output(self, key, posts):
-        return posts.tags.split(",") if type(posts) == PostModel else []
-
+# JSON fields/arguments to be recieved in an API request
 post_args = reqparse.RequestParser()
 post_args.add_argument("title", type=str, required=True, help="Post requires title")
 post_args.add_argument("content", type=str, required=True, help="Post requires content")
 post_args.add_argument("category", type=str, required=True, help="Post requires category")
 post_args.add_argument("tags", type=str, action="append", required=True, help="Post requires tag(s)")
 
+# Custom field to convert a string of comma seperated tag values into a list
+class TagsField(fields.Raw):
+    def output(self, key, posts):
+        return posts.tags.split(",") if type(posts) == PostModel else []
+
+# JSON fields/arguments to be sent in API responses
 post_fields = {
     "id": fields.Integer,
     "title": fields.String,
@@ -42,12 +46,14 @@ post_fields = {
 }
 
 
-
 class Posts(Resource):
     @marshal_with(post_fields)
     def get(self):
-        term = f"%{request.args.get("term") or ''}%"
-        posts = PostModel.query.filter(PostModel.title.like(term) | PostModel.content.like(term) | PostModel.category.like(term)).all()
+        if request.args.get("term"):
+            term = "%" + request.args.get("term") + "%"
+            posts = PostModel.query.filter(PostModel.title.like(term) | PostModel.content.like(term) | PostModel.category.like(term)).all()
+        else:
+            posts = PostModel.query.all()
         return posts, 200
     
     @marshal_with(post_fields)
@@ -97,6 +103,7 @@ routes.add_resource(Post, "/posts/<int:id>")
 
 
 if __name__ == "__main__":
+    # Create the database file if it does not exist
     if not isfile(app.config["SQLALCHEMY_DATABASE_URI"].replace("sqlite:///", "./instance/")):
         with app.app_context():
             db.create_all()
